@@ -1,0 +1,262 @@
+{% extends 'base.html'%}
+
+
+{% block head %}
+<!-- The main page stylesheet-->
+<link rel="stylesheet" href="{{url_for('static',filename='css/index.css')}}">
+{% endblock%}
+
+
+{% block body%}
+<!--************************************* Truth Mask ************************************-->
+<table class="content-main">
+    <tr>
+        <td class="contentHeader-container">
+            <h1> Truth Mask </h1>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Open the file-->
+            <input type='file' name='img' size='65' id='upload-image' class="button" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Canvas-->
+            <div id="canvas-container1">
+                <canvas id="myCanvas" width="100" height="100" style="z-index: 0;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+                <canvas id="myCanvasMask" width="100" height="100" style="z-index: 1;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
+        <th>
+            <div id="small-brush" class="tool-color">
+                <p>Small Brush</p>
+            </div>
+        </th>
+        <th>
+            <div id="medium-brush" class="tool-color">
+                <p>Medium Brush</p>
+            </div>
+        </th>
+        <th>
+            <div id="large-brush" class="tool-color">
+                <p>Large Brush</p>
+            </div>
+        </th>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
+        <th>
+            <button name="send" id="sendbutton">Send</button>
+        </th>
+        <th>
+            <div id="reset" class="tool-color">
+                <p>Reset</p>
+            </div>
+        </th>
+        </td>
+    </tr>
+</table>
+<!--************************************* Train User ************************************-->
+<table class="content-main">
+    <tr>
+        <td class="contentHeader-container">
+            <h1> Train User </h1>
+        </td>
+    </tr>
+    <!--Load Users-->
+    <tr>
+        <td> 
+            <button name="loadUsers" id="loadUsers"> Load the users </button>
+        </td>
+    </tr>
+    <!--Switch users-->
+    <tr id="users">
+
+    </tr>
+    <!--Show User Score-->
+    <tr>
+        <td class="userScore-td">
+            <div class="userElo">
+                Rank:
+            </div>
+        </td>
+        <td class="userScore-td">
+            <div class="grade">
+                Grade:
+            </div>
+        </td>
+        <td class="userScore-td">
+            <div class="score">
+                Score:
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Canvas-->
+            <div id="canvas-container2">
+                <canvas id="myCanvasUser" width="100" height="100" style="z-index: 0;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+                <canvas id="myCanvasMaskUser_truth" width="100" height="100" style="z-index: 1;">
+                        Your browser does not support the HTML canvas tag.</canvas>
+                <canvas id="myCanvasMaskUser" width="100" height="100" style="z-index: 2;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
+        <th>
+            <div id="small-brush2" class="tool-color">
+                <p>Small Brush</p>
+            </div>
+        </th>
+        <th>
+            <div id="medium-brush2" class="tool-color">
+                <p>Medium Brush</p>
+            </div>
+        </th>
+        <th>
+            <div id="large-brush2" class="tool-color">
+                <p>Large Brush</p>
+            </div>
+        </th>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
+        <th>
+            <button name="send" id="sendUserMask">Send</button>
+        </th>
+        <th>
+            <button name="getScoreName" id="getScore"> See Results </button>
+        </th>
+        <th>
+            <button name="getGroundTruthfoo" id="getGroundTruth"> See Ground Truth </button>
+        </th>
+        <th>
+            <div id="reset2" class="tool-color">
+                <p>Reset</p>
+            </div>
+        </th>
+        </td>
+    </tr>
+</table>
+<!--************************************* Start Consensus ************************************-->
+<table class="content-main">
+    <tr>
+        <td class="contentHeader-container">
+            <h1> Consensus Masking </h1>
+        </td>
+    </tr>
+      <!--Switch users-->
+      <tr id="users2">
+
+    </tr>
+    <!--Canvas-->
+    <tr>
+        <td>
+            <div id="canvas-container3">
+                <canvas id="myCanvasUser2" width="100" height="100" style="z-index: 0;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+                <canvas id="ConsensusMask" width="100" height="100" style="z-index: 1;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
+        <th>
+            <div id="small-brush3" class="tool-color">
+                <p>Small Brush</p>
+            </div>
+        </th>
+        <th>
+            <div id="medium-brush3" class="tool-color">
+                <p>Medium Brush</p>
+            </div>
+        </th>
+        <th>
+            <div id="large-brush3" class="tool-color">
+                <p>Large Brush</p>
+            </div>
+        </th>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
+        <th>
+            <button name="send" id="sendConsensusMask"> Send</button>
+        </th>
+        <th>
+            <button name="btnRest" id="hardReset"> Hard Reset </button>
+        </th>
+        <th>
+            <div id="reset3" class="tool-color">
+                <p>Reset</p>
+            </div>
+        </th>
+        </td>
+    </tr>
+</table>
+<!--************************************* Show Consensus Mask ************************************-->
+<table class="content-main">
+    <tr>
+        <td class="contentHeader-container">
+            <h1> Consensus Masking </h1>
+        </td>
+    </tr>
+      <!--Switch users-->
+      <tr id="users2">
+
+    </tr>
+    <!--Canvas-->
+    <tr>
+        <td>
+            <div id="canvas-container4">
+                <canvas id="myCanvasUser3" width="100" height="100" style="z-index: 0;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+                <canvas id="FinalConsensusMask" width="100" height="100" style="z-index: 1;">
+                    Your browser does not support the HTML canvas tag.</canvas>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
+        <th>
+            <button name="getCurrentConMask" id="getCurrentConsensusMask"> Show Mask </button>
+        </th>
+        <th>
+            <div id="reset2" class="tool-color">
+                <p>Reset</p>
+            </div>
+        </th>
+        </td>
+    </tr>
+</table>
+
+
+
+<script src="{{url_for('static',filename='js/index.js')}}"></script>
+{% endblock %}
+
+
+{% block footer %}
+<p>Author: boardkeystown</p>
+<p>CIS 556</p>
+{% endblock %}

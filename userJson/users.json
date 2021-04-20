@@ -1,0 +1,34 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "elo": 1,
+            "correctMatches": 0,
+            "incorrectMatches": 0
+        },
+        {
+            "id": 2,
+            "elo": 1,
+            "correctMatches": 0,
+            "incorrectMatches": 0
+        },
+        {
+            "id": 3,
+            "elo": 10,
+            "correctMatches": 0,
+            "incorrectMatches": 0
+        },
+        {
+            "id": 4,
+            "elo": 1,
+            "correctMatches": 0,
+            "incorrectMatches": 0
+        },
+        {
+            "id": 5,
+            "elo": 1,
+            "correctMatches": 0,
+            "incorrectMatches": 0
+        }
+    ]
+}

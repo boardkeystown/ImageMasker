@@ -1,0 +1,114 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: black;
+}
+
+p,h1,th {
+    color: white;
+}
+
+/*the header on the table*/
+.contentHeader-container{
+    width: 100%;
+    margin: auto;
+    text-align: center;
+}
+
+/*the table style stuff*/
+.content-main {
+    margin: auto;
+    width: 60%;
+    border: 3px solid #73AD21;
+    padding: 10px;
+}
+
+
+/*each canvas container*/
+#canvas-container1,#canvas-container2,#canvas-container3,#canvas-container4{
+    position: relative;
+    /*
+    border: 3px solid #00658d;*/
+    width: 100px;
+    height: 100px;
+}
+
+
+#myCanvas,#myCanvasUser,#myCanvasUser2,#myCanvasUser3 {
+    border: 1px solid #999;
+    display: block;
+     
+    position: absolute; 
+    top: 0%;
+    left: 0%;
+  /*
+     */
+}
+
+#myCanvasMask, #myCanvasMaskUser,#myCanvasMaskUser_truth, #ConsensusMask,#FinalConsensusMask {
+    border: 1px solid rgb(224, 1, 1);
+    display: block;
+    position: absolute;
+      position: absolute;
+     top: 0%;
+    left: 0%;/* */
+}
+
+
+.button{
+    float: left;
+}
+
+footer {
+    margin: auto;
+    width: 60%;
+    border: 3px solid #73AD21;
+    padding: 10px;
+}
+
+.tool-color{
+    background-color:cadetblue;
+}
+
+.tool-color:hover{
+    background-color:rgb(7, 173, 179);
+    cursor: pointer;
+}
+
+
+.userScore-td{
+    border: 3px solid #73AD21;
+    margin-right: 8px;
+    display: block;
+    float: left;
+}
+
+.userElo, .grade, .score {
+    color: #73AD21;
+}
+
+#users,#users2{
+    color: white;
+}
+
+.users-btn{
+    background-color:cadetblue;
+    width: 100px;
+    text-align: center;
+    margin: 10px;
+    display: block;
+    float: left;
+}
+
+.users-btn:hover{
+    background-color:rgb(7, 173, 179);
+    cursor: pointer;
+}
+
+.user-btn-select{
+    box-shadow: 3px 2px 21px 3px #73ad21, 0px 0px 4px 2px #73ac9e;
+}
