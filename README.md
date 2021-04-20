@@ -8,7 +8,7 @@ Crowdsourced image masking proof of concept.
 
 This is a class project created for CIS 556 : Gamification Design at the University of Massachusetts Dartmouth
 
-#Q: What is this?  
+# Q: What is this?  
 
 ImageMasker is a simple web application that demonstrates multiple users can be trained to mask an image and develop an accumulative score based on skill.  So that when said users are faced with a hypothetical unidentified image. They can attempt to mask it such that their collective masks will generate a reasonable consensus masking based on their collective skill i.e., weights. 
 This project was inspired entirely by [Stall Catchers](https://stallcatchers.com/main) and their plan to incorporate crowdsourced masking. 
