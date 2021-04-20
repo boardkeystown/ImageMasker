@@ -114,6 +114,14 @@
             </div>
         </td>
     </tr>
+        <!--Mask response -->
+        <tr> 
+            <td class="userScore-td"> 
+                <div class="maskResult">
+                    Result: 
+                </div>
+            </td>
+        </tr>
     <tr>
         <td>
             <!--Tools-->
@@ -146,13 +154,26 @@
         <th>
             <button name="getGroundTruthfoo" id="getGroundTruth"> See Ground Truth </button>
         </th>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <!--Tools-->
         <th>
             <div id="reset2" class="tool-color">
-                <p>Reset</p>
+                <p>Reset Image</p>
+            </div>
+        </th>
+        <th>
+            <div id="hardReset" class="tool-color">
+                <p>Reset All Users</p>
             </div>
         </th>
         </td>
     </tr>
+
+
+
 </table>
 <!--************************************* Start Consensus ************************************-->
 <table class="content-main">
@@ -165,6 +186,15 @@
       <tr id="users2">
 
     </tr>
+    <!--Show User Score-->
+    <tr>
+        <td class="userScore-td">
+            <div class="userElo">
+                Rank:
+            </div>
+        </td>
+    </tr>
+    
     <!--Canvas-->
     <tr>
         <td>
@@ -203,11 +233,13 @@
             <button name="send" id="sendConsensusMask"> Send</button>
         </th>
         <th>
-            <button name="btnRest" id="hardReset"> Hard Reset </button>
+            <div id="reset3" class="tool-color">
+                <p>Reset Image</p>
+            </div>
         </th>
         <th>
-            <div id="reset3" class="tool-color">
-                <p>Reset</p>
+            <div id="hardResetConsensusMask" class="tool-color">
+                <p>Hard Reset All</p>
             </div>
         </th>
         </td>
@@ -242,10 +274,10 @@
             <button name="getCurrentConMask" id="getCurrentConsensusMask"> Show Mask </button>
         </th>
         <th>
-            <div id="reset2" class="tool-color">
-                <p>Reset</p>
+            <div id="reset4" class="tool-color">
+                <p>Reset Image</p>
             </div>
-        </th>
+         </th>        
         </td>
     </tr>
 </table>

@@ -25,16 +25,27 @@ import io
 import datetime
   
 
+#used to find minima 
+from scipy import optimize
+import scipy.ndimage.filters as filters
+import scipy.ndimage.morphology as morphology
+
+
+
 #constants 
 GRADETHRESH = 60   
 MISSINGTHRESH = -2100
 LOWSCOREFILTER = 0.1
+IMAGEDIR = "img"
+USERJSONDIR = "userJson"
+CONJSONDIR = "consensusMaskJson"
 
 #globals 
 currentUser = 1 #see java script 
 currentUserPath = "img\\userMask.png"
 consensusMaskPath = "img\\consensusMask"
 consensusMaskJsonPath = "consensusMaskJson"
+
 
 
 
@@ -68,6 +79,20 @@ def set_truthMask():
 
     return "truth mask sent"
 
+#this hard resets the values in the users json 
+@app.route('/hardUserReset', methods=['POST'])
+def set_userJsonHardReset():
+    hard_reset_users(USERJSONDIR)
+    return "values rest"
+
+
+#this hard resets the values in the users json 
+@app.route('/hardResetConsensusMask', methods=['POST'])
+def set_userJsonResetConsensusMask():
+    hard_reset_user_consensus(CONJSONDIR)
+    return "values rest"
+
+
 #This retruns to the browser the current consensus mask 
 #based on user consensus maskings 
 @app.route('/getImageRedMask', methods=['GET'])
@@ -88,7 +113,15 @@ def set_getCurrentUser():
     data = json.loads(request.data.decode())["id"]
     currentUser = data
     print("user switched to {}".format(currentUser))
-    return "sent"
+
+    #also return the elo score of the current user 
+     #grab the current user scores
+    data, outPath = loadJsonDataObj("userJson\\*.json")
+    #get the current scores for the current users
+    elo, correctMatches, incorrectMatches = getUserScoreFromJson(data, currentUser)
+
+    jsonResp = {'elo' :elo}
+    return jsonify(jsonResp)
 
 #this gets the current user created mask from the browser 
 #and saves it to a directory which corrcosponds the the current user 
@@ -150,11 +183,17 @@ def get_userScore():
     print("numCorrect {}".format(numCorrect))
     print("numIncorrect {}".format(numIncorrect))
 
+
+    #tell whether the mask was correct or not
+    result = False
+    if (numCorrect > correctMatches):
+        result = True
+
     #save them back to the json file 
     data = setUserScoreFromJson(data, currentUser, elo,numCorrect,numIncorrect)
     saveJsonDataObjToFile(data,outPath)
 
-    jsonResp = {'elo' : elo, 'grade' : grade, 'score' : score}
+    jsonResp = {'elo' : elo, 'grade' : grade, 'score' : score, "isCorrect" : result }
     #jsonResp = {'elo' : 5, 'grade' : 5, 'score' : 5}
     print("--------------------------------------------------")
     print("Current User[{}]".format(currentUser))
@@ -234,7 +273,7 @@ def initUsers():
 
     #copy out the id numbers and save to a json array 
     listTest = []
-    for i in range(len(data['users'])):
+    for i in range(0,len(data['users'])):
         listTest.append(data['users'][i]['id'])
 
     #convert to json send to the browser
@@ -247,6 +286,34 @@ def initUsers():
 
 
 #*******************************************************My functions*********************************************************************
+
+#hardResetConsensusMask
+
+
+def hard_reset_users(inputPath):
+    """This resets the userJson to all 0 values when called 
+    """
+    #open the json 
+    data, outPath = loadJsonDataObj(inputPath+os.sep+"users.json")
+    #rest the values
+    for i in range(0,len(data['users'])):
+        if data['users'][i]['id'] == currentUser:
+            # print(data['users'][i]['elo'])
+            data['users'][i]['elo'] = 0
+            # print(data['users'][i]['correctMatches'])
+            data['users'][i]['correctMatches'] = 0
+            # print(data['users'][i]['incorrectMatches'])
+            data['users'][i]['incorrectMatches'] = 0
+    #save the current values 
+    saveJsonDataObjToFile(data,outPath)
+
+
+def hard_reset_user_consensus(jsonPath):
+    """This hard resets the user consensus masks json data by removing it
+    """
+    if os.path.exists(jsonPath+os.sep+"data.json"):
+        os.remove(jsonPath+os.sep+"data.json")
+
 
 
 def get_encoded_img(image_path):
@@ -263,23 +330,25 @@ def get_encoded_img(image_path):
     #return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAIAAAC6s0uzAAAIi0lEQVR4Ae3BAQpFWXUEwO79L/oEBEFJJEoyPfPur6oGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYawCAuQYAmGsAgLkGAJhrAIC5BgCYa4A/3t3l39Y2wOsa4A92d/kPtQ3wtAb4N9xdhtoGeFoD/Gt3lz9J2wDvaoD/5u7yF9A2wKMa4J/dXf4a2gZ4VAP8zd3lr6dtgBc18MPuLn95bQM8p4Hfc3f5jrYBntPAL7m7fFDbAG9p4DfcXT6rbYC3NPAD7i4f1zbAQxp43d3lCW0DvKKBp91dXtE2wCsaeNfd5S1tAzyhgUfdXZ7TNsATGnjU3eVFbQN8XwMvurs8qm2A72vgRXeXd7UN8HENPOfu8rS2AT6ugefcXZ7WNsDHNfCcu8vT2gb4uAaec3d5XdsAX9bAc+4ur2sb4MsaeM7d5XVtA3xZA8+5u/yAtgE+q4Hn3F1+QNsAn9XAc+4uv6FtgG9q4Dl3l622d5e5tgG+qYHn3F1W2ia5u/wZ2gb4pgaec3eZaJu/ubv8GdoG+KYGnnN3WWl7d/mTtA3wTQ085+7yG9oG+KYGnnN3+Q1tA3xTA8+5u/yMtgE+qIHn3F1+RtsAH9TAc+4uP6NtgA9q4Dl3l5/RNsAHNfCiu8tvaBvggxp40d3lN7QN8EENvOju8hvaBvigBl50d/kNbQN8UAMvurv8hrYBPqiBF91dfkPbAB/UwIvuLr+hbYAPauBFd5ff0DbABzXworvLb2gb4IMaeNTd5XVtA3xTA++6u7yrbYDPauBpd5cXtQ3wZQ087e7ynLYBPq6Bp91d3tI2wPc18LS7yyvaBnhFA6+7u3xf2wAPaeAH3F2+rG2AtzTwG+4u39Q2wHMa+Bl3l69pG+BFDfySu8tHtA3wrgZ+zN3lr61tgNc18JPuLn8xbQP8jAZ+1d3lr6FtgB/TwK+6u/yp2gb4VQ38sLvLUNsA/E0DP+zustI2AH/XwG+7u/zx2gbgHzTw8+4uf6S2AfhnDZDcXf4AbQPwP2mAv7m7/P9pG4B/rQH+7u7yf9Y2AP+bBvgHd5f/XNsA/CcaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYK4BAOYaAGCuAQDmGgBgrgEA5hoAYO6/AIjy3+HYnuNoAAAAAElFTkSuQmCC"
   
 
-"""Returns a pixel-by-pixel mask true for every white pixel.
-: param image: cv2.imread() 
-""" 
+
 def getImageToMask(image):
+    """Returns a pixel-by-pixel mask true for every white pixel.
+    : param image: cv2.imread() 
+    """ 
     #for every pixel in the image if it is > 1
     #then set it to true
     mask = image > 1 
     return mask
 
 
-"""Return a mask applied and blacked out   
-:param mask: byte array pixel-by-pixel for the image 
-:param image: cv2.imread()
-:param width: the width of the image 
-:param height: the height of the image 
-"""
+
 def applyMask(mask,imageArray, width, height):
+    """Return a mask applied and blacked out   
+    :param mask: byte array pixel-by-pixel for the image 
+    :param image: cv2.imread()
+    :param width: the width of the image 
+    :param height: the height of the image 
+    """
     result = imageArray.copy()
     black = [0,0,0]
     for i in range(0,height):
@@ -290,13 +359,14 @@ def applyMask(mask,imageArray, width, height):
     return result
 
 
-"""Return a mask applied and white out   
-:param mask: byte array pixel-by-pixel for the image 
-:param image: cv2.imread()
-:param width: the width of the image 
-:param height: the height of the image 
-"""
+
 def applyWhiteMask(mask,imageArray, width, height):
+    """Return a mask applied and white out   
+    :param mask: byte array pixel-by-pixel for the image 
+    :param image: cv2.imread()
+    :param width: the width of the image 
+    :param height: the height of the image 
+    """
     result = imageArray.copy()
     white = [255,255,255]
     for i in range(0,height):
@@ -307,9 +377,10 @@ def applyWhiteMask(mask,imageArray, width, height):
     return result
 
 
-"""apply a red mask to a image. This will turn all white pixels red 
-"""
+
 def applyRedMask(mask,imageArray, width, height):
+    """apply a red mask to a image. This will turn all white pixels red 
+    """
     result = imageArray.copy()
     red = [0,0,255]
     for i in range(0,height):
@@ -321,12 +392,13 @@ def applyRedMask(mask,imageArray, width, height):
 
 
 
-"""count the number of trues from a mask and return the count
-:param mask: the mask 
-:width: the width of the image 
-:height: the height of the image
-"""
+
 def boolCounter(mask, width, height):
+    """count the number of trues from a mask and return the count
+    :param mask: the mask 
+    :width: the width of the image 
+    :height: the height of the image
+    """
     result = 0
     for i in range(0, height):
         for j in range (0,width):
@@ -335,19 +407,19 @@ def boolCounter(mask, width, height):
     return result
 
 
-""" This is a simple score for the user mask of the truth mask and returns a grade and accuracy score.
-The closer the score is to 0 the better because it would mean 100% accuracy.  
 
-100       truth mask 
---- X ------------------     = grade
- x     correct user mask 
-
-score = [(grade/100) * overlap] - overlap  
-:pramas turthMaskTotal: the number of trues from the turth mask 
-:pramas userCorrectMaskTotal: the number trues between the user mask and the truth mask
-:pramas userOverlapTotal: the number of trues that overlap the area of the turth mask
-"""
 def getGradeAndAccuracyScore(turthMaskTotal,userCorrectMaskTotal,userOverlapTotal):
+    """ This is a simple score for the user mask of the truth mask and returns a grade and accuracy score.
+    The closer the score is to 0 the better because it would mean 100% accuracy.  
+
+    100       truth mask 
+    --- X ------------------     = grade
+     x     correct user mask 
+    score = [(grade/100) * overlap] - overlap  
+    :prams turthMaskTotal: the number of trues from the truth mask 
+    :pramas userCorrectMaskTotal: the number trues between the user mask and the truth mask
+    :pramas userOverlapTotal: the number of trues that overlap the area of the truth mask
+    """
     grade = (userCorrectMaskTotal * 100) / turthMaskTotal
     accuracyScore = ((grade/100) * userOverlapTotal) -userOverlapTotal
     if((grade/100) == 1):
@@ -355,10 +427,11 @@ def getGradeAndAccuracyScore(turthMaskTotal,userCorrectMaskTotal,userOverlapTota
     return grade, accuracyScore
 
 
-"""This returns the grade and accuracy score of the truth mask and the user mask
-:return grade, accuracyScore: grade is a latter grade, and accuracyScore is the number of pixels that go over. The lower the number the better the score.  
-"""
+
 def getUserMaskAccuracy(user_mask, truth_mask, width, height):
+    """This returns the grade and accuracy score of the truth mask and the user mask
+    :return grade, accuracyScore: grade is a latter grade, and accuracyScore is the number of pixels that go over. The lower the number the better the score.  
+    """
     #we calculate the number of pixels from the truth mask
     turthMaskTotal = boolCounter(truth_mask,width,height)
     #find the logical and array of turth mask and user mask 
@@ -373,14 +446,15 @@ def getUserMaskAccuracy(user_mask, truth_mask, width, height):
     userOverlapTotal = boolCounter(mask_xor,width,height)
     return getGradeAndAccuracyScore(turthMaskTotal,userCorrectMaskTotal,userOverlapTotal)
 
-"""Accumulative score: This increments the number of games played by one. And has logic to handle the event of a first-time player. This return the new EloScore, the numberOfCorrectMatches, and the numberOfIncorrectMatches. 
-:param grade: the grade score of a mask 
-:param gradeThreshold: the threshold that prevents it from counting has being correct
-:parma accuracyScore: the accuracy score (number of overlapping pixels)
-:parma accuracyScoreThreshold: the threshold that prevents it form count has being correct
-:param numberOfGamesPlayed: the number of masked made by a player
-"""
+
 def getAccumulativeScore(grade, gradeThreshold, accuracyScore, accuracyScoreThreshold, numberofCorrectMatches, numberofIncorrectMatches):
+    """Accumulative score: This increments the number of games played by one. And has logic to handle the event of a first-time player. This return the new EloScore, the numberOfCorrectMatches, and the numberOfIncorrectMatches. 
+    :param grade: the grade score of a mask 
+    :param gradeThreshold: the threshold that prevents it from counting has being correct
+    :parma accuracyScore: the accuracy score (number of overlapping pixels)
+    :parma accuracyScoreThreshold: the threshold that prevents it form count has being correct
+    :param numberOfGamesPlayed: the number of masked made by a player
+    """
     #Score Constants
     value = 400 #the elo constant for score 
     firstTimeAdjust = .5 #the adjustment for a first time player (to prevent a high frist score) 
@@ -404,18 +478,20 @@ def getAccumulativeScore(grade, gradeThreshold, accuracyScore, accuracyScoreThre
     newElo = newElo/400
     return newElo, numberofCorrectMatches, numberofIncorrectMatches
 
-"""This returns a list of files from the provided path. 
-path e.g, "foo\\*.ext"
-"""
+
 def basicFileReader(path):
+    """This returns a list of files from the provided path. 
+    path e.g, "foo\\*.ext"
+    """
     filesList = []
     filesList = glob.glob(path)
     return filesList
 
-"""This takes a path to the userJson file
-    then then returns a python json object
-"""
+
 def loadJsonDataObj(path):
+    """This takes a path to the userJson file
+        then then returns a python json object
+    """
     #open the path with the json in it and safe the files  
     files = basicFileReader(path)
     #should be only the first one, and we want to turn 
@@ -425,15 +501,16 @@ def loadJsonDataObj(path):
     f.close()
     return data, files[0]
 
-"""Retruns elo, correctMatches, and incorrectMatches
-   for a given current user
-"""
+
 def getUserScoreFromJson(data,currentUser):
+    """Retruns elo, correctMatches, and incorrectMatches
+       for a given current user
+    """
     elo = 1
     correctMatches = 1
     incorrectMatches = 1
     isFound = False
-    for i in range(len(data['users'])):
+    for i in range(0,len(data['users'])):
         if data['users'][i]['id'] == currentUser:
             # print(data['users'][i]['elo'])
             elo = data['users'][i]['elo']
@@ -446,10 +523,11 @@ def getUserScoreFromJson(data,currentUser):
         print("Error: user id={} NOT FOUND".format(currentUser))
     return elo, correctMatches, incorrectMatches
 
-"""Sets the elo, correctMatches, and incorrectMatches
-   for a given current user. And return the data
-"""
+
 def setUserScoreFromJson(data,currentUser, elo,correctMatches,incorrectMatches):
+    """Sets the elo, correctMatches, and incorrectMatches
+    for a given current user. And return the data
+    """
     isFound = False
     for i in range(0,len(data['users'])):
         if data['users'][i]['id'] == currentUser:
@@ -462,20 +540,21 @@ def setUserScoreFromJson(data,currentUser, elo,correctMatches,incorrectMatches):
     return data
 
 
-"""This takes a json data object and saves it the outPath
-"""
 def saveJsonDataObjToFile(data,outPath):
+    """This takes a json data object and saves it the outPath
+    """
     with open(outPath,'w') as outfile:
         json.dump(data, outfile)
     outfile.close()
 
 
-"""Checks if a from the provided path exist and
-if it does not it creates it.
-Example use: "foo"+os.path.sep+"bar.ext"
-:include: the stuff you want in the file as a default 
-"""
+
 def checkIfFileExistToMake(path, include):
+    """Checks if a from the provided path exist and
+    if it does not it creates it.
+    Example use: "foo"+os.path.sep+"bar.ext"
+    :include: the stuff you want in the file as a default 
+    """
     CHECK_FOLDER = os.path.isfile(path)
     # If folder doesn't exist, then create it.
     if not CHECK_FOLDER:
@@ -483,11 +562,12 @@ def checkIfFileExistToMake(path, include):
             f.write(include)
         f.close()
 
-"""This saves the consensus mask with the image path and score data 
-   to a json file. It only appends.
-:jsonPath: the folder path 
-"""
+
 def setConsensusMaskJson(jsonPath,currentEloScore,imageFilePath,userId):
+    """This saves the consensus mask with the image path and score data 
+       to a json file. It only appends.
+    :jsonPath: the folder path 
+    """
     jsonDefaultData = "{\"conMasks\": []}"
     #check if the path exist to see if we need to make it 
     checkIfPathExistToMake(jsonPath)
@@ -506,11 +586,12 @@ def setConsensusMaskJson(jsonPath,currentEloScore,imageFilePath,userId):
     outfile.close()
 
 
-"""Checks if the directory from the provided path exist and
-if it does not it creates it.
-Example use: "foo"+os.path.sep+"bar"
-"""
+
 def checkIfPathExistToMake(path):
+    """Checks if the directory from the provided path exist and
+        if it does not it creates it.
+        Example use: "foo"+os.path.sep+"bar"
+    """
     CHECK_FOLDER = os.path.isdir(path)
     # If folder doesn't exist, then create it.
     if not CHECK_FOLDER:
@@ -518,30 +599,33 @@ def checkIfPathExistToMake(path):
 
 
 
-"""This takes a mask and fills it with empty false values as 
-   it is the group mask. This returns a group mask of empty 
-   float values
-"""
+
 def makeGroupMask(groupMaskValues):
+    """This takes a mask and fills it with empty false values as 
+        it is the group mask. This returns a group mask of empty 
+        float values
+    """
     result = groupMaskValues.copy()
     result.fill(False)
     result = result.astype('float64')
     return result
 
-"""This takes the accumulative score of a user and adds it as a weight to
-the group mask values based on the consensus mask 
-"""
+
 def addToGroupMask(elo,groupMaskValues,imageMaskArray,width,height):
+    """This takes the accumulative score of a user and adds it as a weight to
+    the group mask values based on the consensus mask 
+    """
     for i in range(0,height):
         for j in range (0,width):
             if(imageMaskArray[i][j].all() == True):
                 groupMaskValues[i][j] += elo
     return groupMaskValues
 
-"""This takes a threshold value and the groupMaskValues and based on the mask 
-   retruns a consensus mask. 
-"""
+
 def getConsensusMask(threshold,groupMaskValues,imageMaskArray,width,height):
+    """This takes a threshold value and the groupMaskValues and based on the mask 
+    retruns a consensus mask. 
+    """
     result = imageMaskArray.copy()
     result = result ^ result #clear all true values 
     thresholdList = [threshold,threshold,threshold] 
@@ -551,10 +635,27 @@ def getConsensusMask(threshold,groupMaskValues,imageMaskArray,width,height):
                 result[i][j].fill(True)
     return result
 
-"""This calculates the consensus mask then saves the current consensus mask
-   based on the data in the consensus mask json path 
-"""
+
+
+
+def findTheLowestOfTheValues(max,groupMaskValues, height, width):
+    """Find the loweset value of the groupMask values because the size 
+        need needs to be removed from the threshold used otherwise the 
+        threshold value will be off. 
+     """
+    result = max
+    for i in range(0,height):
+        for j in range (0,width):
+            if(groupMaskValues[i][j][0] < result):
+                result = groupMaskValues[i][j][0]
+                print(result)
+    return result
+
+
 def computeConsensusMaskAndSave(jsonPath,outPath):
+    """This calculates the consensus mask then saves the current consensus mask
+    based on the data in the consensus mask json path 
+    """
     jsonDataOBJ, files = loadJsonDataObj(jsonPath+os.sep+"data.json") #consensusMaskJsonPath+os.sep+"data.json"
     #open the first image to get the width and height of it 
     
@@ -588,10 +689,20 @@ def computeConsensusMaskAndSave(jsonPath,outPath):
 
     #compute the threshold value 
     avg = total / len(jsonDataOBJ['conMasks'])
-    thresh = total - avg
+    threshTemp = total - avg
+    lowest = findTheLowestOfTheValues(total,groupMaskValues,height,width)
+    thresh = threshTemp - lowest
 
-    #save the full mask of all values 
+    print("Current Consensus Mask Values-----")
+    print("Total Possable Consensus    :{}".format(total)) 
+    print("Average Possable Consensus  :{}".format(avg))
+    print("Lowest Value Of Masks       :{}".format(lowest))
+    print("Number of Masks             :{}".format(len(jsonDataOBJ['conMasks'])))
+    print("thresh = total - avg        :{}".format(threshTemp))
+    print("thresh = threshTemp - lowest:{}".format(thresh))
+    print("----------------------------------")
 
+    #save the full mask of all values
     # make the initial image all black so we can save the mask to it 
     temp = input_img_array * 0 
     temp = applyWhiteMask(groupMask,temp,width,height)
@@ -604,8 +715,6 @@ def computeConsensusMaskAndSave(jsonPath,outPath):
     temp = input_img_array * 0 
     temp = applyWhiteMask(groupMask,temp,width,height) 
     cv2.imwrite(outPath+os.path.sep+"currentConsensus.png",temp)
-
-
 
 
 if __name__ == "__main__":

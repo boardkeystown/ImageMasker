@@ -287,6 +287,20 @@ document.getElementById('reset2').addEventListener('click', () => {
 }, false);
 
 
+//truth mask reset button 
+document.getElementById('hardReset').addEventListener('click', () => {
+    var image = canvasTruthMask.toDataURL();
+    var r = new XMLHttpRequest();
+    r.open("POST", "http://127.0.0.1:5000/hardUserReset", true);
+    r.onreadystatechange = function () {
+        if (r.readyState != 4 || r.status != 200) return;
+        //alert("Success: " + r.responseText);
+        console.log(r.responseText);
+    };
+    r.send(JSON.stringify({ "input": "foo" }));
+}, false);
+
+
 
 /**The send button for the truth mask, 
  * sends to the server the current truth mask drawn
@@ -321,6 +335,7 @@ document.getElementById("getScore").addEventListener('click', () => {
             console.log(JSON.parse(xhr.responseText));
             let data = JSON.parse(xhr.responseText);
             setUserResults(data.elo, data.grade, data.score);
+            setMaskResponse(data.isCorrect, false);
         }
 
     };
@@ -339,10 +354,41 @@ document.getElementById("getScore").addEventListener('click', () => {
 function setUserResults(elo, grade, score) {
     let a = document.getElementsByClassName('userElo');
     a[0].innerText = "Rank: " + elo;
+    a[1].innerText = "Rank: " + elo;
     let b = document.getElementsByClassName('grade');
     b[0].innerText = "Grade: " + grade;
     let c = document.getElementsByClassName('score');
     c[0].innerText = "Score: " + score;
+}
+
+function setMaskResponse(result, isReset) {
+    let a = document.getElementsByClassName('maskResult');
+    if(isReset == true) {
+        a[0].innerText = "Result: ";
+        return;
+    }
+
+    if(result == true) {
+        a[0].innerText = "Result: " + getMessage(true);
+    } else {
+        a[0].innerText = "Result: " + getMessage(false);
+    }
+}
+
+function getMessage(bool) {
+    let index = getRandomInt(5) //random number 0-4
+    
+    let goodMessages = ["Great job!😁", "🤘You rock!🤘", "Wow Good Job!", "👏Great Match!👏", "Solid match!"];
+    let badMessages = ["You suck lol", "Not quite right...", "Poor match...", "You can do better...", "Bad match..."];
+    if(bool == true){
+        return goodMessages[index];
+    } else {
+        return badMessages[index];
+    }
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
 }
 
 
@@ -397,8 +443,16 @@ document.getElementById('reset3').addEventListener('click', () => {
 
 
 //HARD RESET OF consensus mask values 
-document.getElementById('hardReset').addEventListener('click', () => {
-    
+document.getElementById('hardResetConsensusMask').addEventListener('click', () => {
+    var r = new XMLHttpRequest();
+    r.open("POST", "http://127.0.0.1:5000/hardResetConsensusMask", true);
+    r.onreadystatechange = function () {
+        if (r.readyState != 4 || r.status != 200) return;
+        //alert("Success: " + r.responseText);
+        console.log(r.responseText);
+    };
+    // Send data in below way from JS
+    r.send(JSON.stringify({ "input": "foo" }));
 
 
 
@@ -448,6 +502,13 @@ document.getElementById("getCurrentConsensusMask").addEventListener('click', () 
     xhr.open('GET', 'http://127.0.0.1:5000/getImage');
     xhr.send();
 });
+
+
+//Reset the consensus mask
+document.getElementById('reset4').addEventListener('click', () => {
+    ctxFinalConsensusMask.clearRect(0, 0, canvasFinalConsensusMask.width, canvasFinalConsensusMask.height);
+}, false);
+
 
 
 
@@ -591,9 +652,15 @@ function sendCurrentUser() {
     var r = new XMLHttpRequest();
     r.open("POST", "http://127.0.0.1:5000/getCurrentUser", true);
     r.onreadystatechange = function () {
-        if (r.readyState != 4 || r.status != 200) return;
-        //alert("Success: " + r.responseText);
-        console.log("sent");
+        if (r.readyState != 4 || r.status != 200) {
+            //alert("Success: " + r.responseText);
+            console.log(r.responseText);
+            let data = JSON.parse(r.responseText);
+            setUserResults(data.elo, 0.0, 0.0);
+            setMaskResponse(false, true);
+            console.log("sent");
+             return;
+        }
     };
     // Send data in below way from JS
     r.send(JSON.stringify({ "id": CURRENT_USER }));
