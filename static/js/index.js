@@ -1,26 +1,3 @@
-/*
-var canvas = document.getElementById('canvas').getContext('2d');
- function draw() {
-    var ctx = document.getElementById('myCanvas').getContext('2d'),
-        img = new Image(),
-        f = document.getElementById('upload-image').files[0],
-        url = window.URL || window.webkitURL,
-        src = url.createObjectURL(f);
-
-    img.src = src;
-    img.onload = function() {
-        
-        ctx.canvas.width = img.width;
-        ctx.canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        url.revokeObjectURL(src);
-    }
-}
-document.getElementById("upload-image").addEventListener("change", draw, false);
-*/
-
-
-
 /**************************Global Constants ************************/
 
 /**The colors used to mask (really only need white)*/
@@ -38,7 +15,6 @@ const sizeNames = ['small-brush', 'medium-brush', 'large-brush'];
  * is nothing to prevent sending things as user 1. TO BAD! 
 */
 var CURRENT_USER = 1;
-
 
 
 /**************************Canvas set up ************************/
@@ -72,7 +48,6 @@ function draw(layer0, layer1, containerName, uploadedImage) {
         url.revokeObjectURL(src);
     }
 }
-
 
 
 /**
@@ -129,11 +104,16 @@ document.getElementById("upload-image").addEventListener("change", function () {
     draw("myCanvas", "myCanvasMask", "canvas-container1", "upload-image");
     //User mask 
     //draw("myCanvasUser", "myCanvasMaskUser", "canvas-container2", "upload-image");
-    draw3("myCanvasUser", "myCanvasMaskUser_truth","myCanvasMaskUser", "canvas-container2", "upload-image");
+    draw3("myCanvasUser", "myCanvasMaskUser_truth", "myCanvasMaskUser", "canvas-container2", "upload-image");
     //Consensus mask 
     draw("myCanvasUser2", "ConsensusMask", "canvas-container3", "upload-image");
     //Final Consensus mask 
     draw("myCanvasUser3", "FinalConsensusMask", "canvas-container4", "upload-image");
+
+
+
+    sendSourceImageToServer("upload-image");
+
 }, false);
 
 
@@ -144,6 +124,31 @@ document.getElementById("upload-image").addEventListener("change", function () {
 function canvasInit(canvasContext) {
     canvasContext.strokeStyle = colors[0]; //Set to white 
     canvasContext.fillStyle = size[0];  //set to 20 px 
+}
+
+
+
+/**This sends the source image to the server*/
+function sendSourceImageToServer(uploadedImage) {
+
+    //var file = document.querySelector('input[type=file]')['files'][0];
+    file = document.getElementById(uploadedImage).files[0]
+    var reader = new FileReader();
+    var baseString;
+    reader.onloadend = function () {
+        baseString = reader.result;
+        //console.log(baseString); 
+        var r = new XMLHttpRequest();
+        r.open("POST", "http://127.0.0.1:5000/getSourceImg", true);
+        r.onreadystatechange = function () {
+            if (r.readyState != 4 || r.status != 200) return;
+            //alert("Success: " + r.responseText);
+            console.log(r.responseText);
+        };
+        // Send data in below way from JS
+        r.send(JSON.stringify({ "input" : baseString }));
+    };
+    reader.readAsDataURL(file);
 }
 
 
@@ -171,14 +176,10 @@ const canvasConsensusMask = document.getElementById('ConsensusMask');
 /*The user mask 2d context*/
 const ctxConsensusMask = canvasConsensusMask.getContext('2d');
 
-
-
 //FINAL CONSENSUS MASK
 const canvasFinalConsensusMask = document.getElementById('FinalConsensusMask');
 /*The user mask 2d context*/
 const ctxFinalConsensusMask = canvasFinalConsensusMask.getContext('2d');
-
-
 
 //TRUTH MASK LISTENERS 
 //Mouse down event 
@@ -240,17 +241,17 @@ function setRedTruthMask() {
             let img = new Image();
             img.src = dataResponse.image_url;
             ctxSavedTruthMask.drawImage(img, 0, 0);
-            var imageData = ctxSavedTruthMask.getImageData(0,0,canvasSavedTruthMask.width,  
+            var imageData = ctxSavedTruthMask.getImageData(0, 0, canvasSavedTruthMask.width,
                 canvasSavedTruthMask.height);
             var data = imageData.data;
             //This restores alpha to the black pixels 
-            var removeBlack = function() {
+            var removeBlack = function () {
                 for (var i = 0; i < data.length; i += 4) {
-                    if(data[i]+ data[i + 1] + data[i + 2] < 10){ 
+                    if (data[i] + data[i + 1] + data[i + 2] < 10) {
                         data[i + 3] = 0; // alpha
                     }
-                } 
-                ctxSavedTruthMask.putImageData(imageData, 0, 0); 
+                }
+                ctxSavedTruthMask.putImageData(imageData, 0, 0);
             };
             removeBlack();
         }
@@ -299,7 +300,6 @@ document.getElementById('hardReset').addEventListener('click', () => {
     };
     r.send(JSON.stringify({ "input": "foo" }));
 }, false);
-
 
 
 /**The send button for the truth mask, 
@@ -363,12 +363,12 @@ function setUserResults(elo, grade, score) {
 
 function setMaskResponse(result, isReset) {
     let a = document.getElementsByClassName('maskResult');
-    if(isReset == true) {
+    if (isReset == true) {
         a[0].innerText = "Result: ";
         return;
     }
 
-    if(result == true) {
+    if (result == true) {
         a[0].innerText = "Result: " + getMessage(true);
     } else {
         a[0].innerText = "Result: " + getMessage(false);
@@ -377,10 +377,10 @@ function setMaskResponse(result, isReset) {
 
 function getMessage(bool) {
     let index = getRandomInt(5) //random number 0-4
-    
+
     let goodMessages = ["Great job!😁", "🤘You rock!🤘", "Wow Good Job!", "👏Great Match!👏", "Solid match!"];
     let badMessages = ["You suck lol", "Not quite right...", "Poor match...", "You can do better...", "Bad match..."];
-    if(bool == true){
+    if (bool == true) {
         return goodMessages[index];
     } else {
         return badMessages[index];
@@ -393,13 +393,10 @@ function getRandomInt(max) {
 
 
 
-
 /**Show the ground truth mask*/
 document.getElementById("getGroundTruth").addEventListener('click', () => {
     setRedTruthMask();
 });
-
-
 
 
 //Consensus LISTENERS
@@ -416,7 +413,6 @@ canvasConsensusMask.addEventListener('mousedown', (evt) => {
 canvasConsensusMask.addEventListener('mouseup', () => {
     canvasConsensusMask.removeEventListener('mousemove', mouseMove, false);
 }, false);
-
 
 
 /**The send button for the user consensus mask 
@@ -453,9 +449,6 @@ document.getElementById('hardResetConsensusMask').addEventListener('click', () =
     };
     // Send data in below way from JS
     r.send(JSON.stringify({ "input": "foo" }));
-
-
-
 }, false);
 
 
@@ -474,24 +467,24 @@ document.getElementById("getCurrentConsensusMask").addEventListener('click', () 
             console.log("I got the image");
             console.log(JSON.parse(xhr.responseText));
             let dataResponse = JSON.parse(xhr.responseText);
-            
+
 
             let img = new Image();
             img.src = dataResponse.image_url;
 
-    
+
             ctxFinalConsensusMask.drawImage(img, 0, 0);
-            var imageData = ctxFinalConsensusMask.getImageData(0,0,canvasFinalConsensusMask.width,  
+            var imageData = ctxFinalConsensusMask.getImageData(0, 0, canvasFinalConsensusMask.width,
                 canvasFinalConsensusMask.height);
             var data = imageData.data;
             //This restores alpha to the black pixels 
-            var removeBlack = function() {
+            var removeBlack = function () {
                 for (var i = 0; i < data.length; i += 4) {
-                    if(data[i]+ data[i + 1] + data[i + 2] < 10){ 
+                    if (data[i] + data[i + 1] + data[i + 2] < 10) {
                         data[i + 3] = 0; // alpha
                     }
-                } 
-                ctxFinalConsensusMask.putImageData(imageData, 0, 0); 
+                }
+                ctxFinalConsensusMask.putImageData(imageData, 0, 0);
             };
             removeBlack();
         }
@@ -510,10 +503,53 @@ document.getElementById('reset4').addEventListener('click', () => {
 }, false);
 
 
+var WAIT_UNTIL_DONE = false;
+document.getElementById('downloadIMG').addEventListener('click', () => {
+    if (WAIT_UNTIL_DONE == true) {
+        return;
+    }
+
+    var xhr = new XMLHttpRequest();
+    // Setup our listener to process compeleted requests
+    xhr.onreadystatechange = function () {
+        // Only run if the request is complete
+        if (xhr.readyState !== 4) return;
+
+        // Process our return data
+        if (xhr.status >= 200 && xhr.status < 300) {
+            // What do when the request is successful
+            console.log("I got the image");
+            console.log(JSON.parse(xhr.responseText));
+            let dataResponse = JSON.parse(xhr.responseText);
+
+            saveBase64AsFile(dataResponse.image_url, "outFile.png");
+            WAIT_UNTIL_DONE = false;
+        }
+    };
+    // Create and send a GET request
+    // The first argument is the post type (GET, POST, PUT, DELETE, etc.)
+    // The second argument is the endpoint URL
+    xhr.open('GET', 'http://127.0.0.1:5000/getFinalImage');
+    xhr.send();
+
+}, false);
+
+
+function saveBase64AsFile(base64, fileName) {
+    var link = document.createElement("a");
+    document.body.appendChild(link);
+    link.setAttribute("type", "hidden");
+    //link.href = "data:text/plain;base64," + base64;
+    link.href = base64;
+    link.download = fileName;
+    link.click();
+    document.body.removeChild(link);
+}
+
+
 
 
 /**************************Reusable Canvas functions ************************/
-
 
 /**
 * Return the mouse position of a canvas 
@@ -659,7 +695,7 @@ function sendCurrentUser() {
             setUserResults(data.elo, 0.0, 0.0);
             setMaskResponse(false, true);
             console.log("sent");
-             return;
+            return;
         }
     };
     // Send data in below way from JS

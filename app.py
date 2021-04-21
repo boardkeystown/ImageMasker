@@ -59,7 +59,6 @@ def index():
 #This saves the truth mask as a .png 
 @app.route('/truthMask', methods=['POST'])
 def set_truthMask():
-    #the truth mask as is 
     print("Got the data")
     imageString = json.loads(request.data.decode())["input"]
     imageString = imageString.split(',')[1]
@@ -78,6 +77,17 @@ def set_truthMask():
     cv2.imwrite("img\\truthMask_red.png", red_input_img_array)
 
     return "truth mask sent"
+#retrun the source image that was opened in the browser 
+@app.route('/getSourceImg', methods=['POST'])
+def set_getSourceImg():
+    print("Got the data")
+    imageString = json.loads(request.data.decode())["input"]
+    imageString = imageString.split(',')[1]
+    nparr = np.fromstring(base64.b64decode(imageString), np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    cv2.imwrite("img\\sourceImg.png", img)
+
+    return "Image sent"
 
 #this hard resets the values in the users json 
 @app.route('/hardUserReset', methods=['POST'])
@@ -248,9 +258,7 @@ def set_userconsensusMask():
 @app.route('/getImage', methods=['GET'])
 def get_Image():
     global consensusMaskJsonPath
-    #Based on the images in the consensus mask folder calculate the current mask 
-
-
+    #Based on the images in the consensus mask folder calculate the current mask
 
     #save the current consensusMask 
     computeConsensusMaskAndSave(consensusMaskJsonPath,"img")
@@ -280,8 +288,29 @@ def initUsers():
     return jsonify(listTest)
 
 
+#This retruns to the browser the final applied mask!  
+@app.route('/getFinalImage', methods=['GET'])
+def get_FinalImage():    
+    #open the current consensus mask 
+    input_img_source = Image.open("img\\currentConsensus.png")
+    width, height = input_img_source.size
+    conMaskImg = cv2.imread("img\\currentConsensus.png")
+    #Convert to a mask 
+    conMask = getImageToMask(conMaskImg)
+    print(conMask[300][250])
 
+    #open the source image 
+    sourceImage = cv2.imread("img\\sourceImg.png")
 
+    #apply the mask
+    sourceImage = applyMask(conMask,sourceImage,width,height)
+
+    #save the image TODO: should be a to just send it without saving...
+    cv2.imwrite("img\\sourceImgMasked.png", sourceImage)
+
+    #Send the final mask to the user! 
+    image = get_encoded_img("img\\sourceImgMasked.png")
+    return jsonify({'image_url': image})
 
 
 
@@ -355,7 +384,7 @@ def applyMask(mask,imageArray, width, height):
         for j in range (0,width):
             if(mask[i][j].all() == True):
             #paint pixels black 
-             result[i][j] = black
+                result[i][j] = black
     return result
 
 
@@ -373,7 +402,7 @@ def applyWhiteMask(mask,imageArray, width, height):
         for j in range (0,width):
             if(mask[i][j].all() == True):
             #paint pixels black 
-             result[i][j] = white
+                result[i][j] = white
     return result
 
 
@@ -387,7 +416,7 @@ def applyRedMask(mask,imageArray, width, height):
         for j in range (0,width):
             if(mask[i][j].all() == True):
             #paint pixels red 
-             result[i][j] = red
+                result[i][j] = red
     return result
 
 
@@ -718,5 +747,5 @@ def computeConsensusMaskAndSave(jsonPath,outPath):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
-    #app.run(debug=True)
+    #app.run(debug=True, use_reloader=False)
+    app.run(debug=True)
