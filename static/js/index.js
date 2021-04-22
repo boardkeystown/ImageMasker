@@ -111,7 +111,7 @@ document.getElementById("upload-image").addEventListener("change", function () {
     draw("myCanvasUser3", "FinalConsensusMask", "canvas-container4", "upload-image");
 
 
-
+    //Save the source image for later processing 
     sendSourceImageToServer("upload-image");
 
 }, false);
@@ -146,7 +146,7 @@ function sendSourceImageToServer(uploadedImage) {
             console.log(r.responseText);
         };
         // Send data in below way from JS
-        r.send(JSON.stringify({ "input" : baseString }));
+        r.send(JSON.stringify({ "input": baseString }));
     };
     reader.readAsDataURL(file);
 }
@@ -334,10 +334,11 @@ document.getElementById("getScore").addEventListener('click', () => {
             // What do when the request is successful
             console.log(JSON.parse(xhr.responseText));
             let data = JSON.parse(xhr.responseText);
-            setUserResults(data.elo, data.grade, data.score);
+            //Update score 
+            setUserResults(data.elo, data.grade, data.score); 
+            //Show result message
             setMaskResponse(data.isCorrect, false);
         }
-
     };
     // Create and send a GET request
     // The first argument is the post type (GET, POST, PUT, DELETE, etc.)
@@ -360,14 +361,13 @@ function setUserResults(elo, grade, score) {
     let c = document.getElementsByClassName('score');
     c[0].innerText = "Score: " + score;
 }
-
+/**This sets the mask response message based on whether the mask was correct or not.*/
 function setMaskResponse(result, isReset) {
     let a = document.getElementsByClassName('maskResult');
     if (isReset == true) {
         a[0].innerText = "Result: ";
         return;
     }
-
     if (result == true) {
         a[0].innerText = "Result: " + getMessage(true);
     } else {
@@ -375,6 +375,7 @@ function setMaskResponse(result, isReset) {
     }
 }
 
+/**This returns either a correct message or a incorrect message*/
 function getMessage(bool) {
     let index = getRandomInt(5) //random number 0-4
 
@@ -387,11 +388,10 @@ function getMessage(bool) {
     }
 }
 
+/**Generates a random int*/
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
-
-
 
 /**Show the ground truth mask*/
 document.getElementById("getGroundTruth").addEventListener('click', () => {
