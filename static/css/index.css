@@ -127,3 +127,15 @@ button:hover {
     color: white;
     width: 300px;
 }
+
+
+#myProgress {
+    width: 100%;
+    background-color: rgb(108, 179, 120);
+  }
+  
+  #myBar {
+    width: 0%;
+    height: 30px;
+    background-color: #af544c;
+  }

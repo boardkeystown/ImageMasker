@@ -338,6 +338,8 @@ document.getElementById("getScore").addEventListener('click', () => {
             setUserResults(data.elo, data.grade, data.score); 
             //Show result message
             setMaskResponse(data.isCorrect, false);
+            //set the bar
+            resultBar(data.score,data.thresh,false);
         }
     };
     // Create and send a GET request
@@ -347,6 +349,50 @@ document.getElementById("getScore").addEventListener('click', () => {
     xhr.send();
 });
 
+
+/**This moves the result bar to show how accurate the mask is*/
+function resultBar(score, thresh, setToBlack) {
+    let n = document.getElementById("myProgress");
+    let x = document.getElementById("myBar");
+
+    //We want to make the bar clear because not in use 
+    if(setToBlack == true) {
+        n.style.backgroundColor = "rgba(255, 0, 0, 0)";
+        x.style.backgroundColor = "rgba(255, 0, 0, 0)";
+        return;
+    }
+    n.style.backgroundColor = "rgb(86, 177, 101)"; //Set the green color
+
+    x.style.width = 0 + "%"; //RESET THE RED WIDTH
+    x.style.backgroundColor = "#af544c" //SET TO RED 
+
+
+    let scoreLocal = score * -1;
+    let threshLocal = thresh *-1;
+    let moveAmount = 100; //BAD
+
+    if(scoreLocal < threshLocal) {
+        let temp = scoreLocal * 100;
+        moveAmount = Math.floor(temp / threshLocal);
+    } 
+
+    //console.log(moveAmount)
+
+    var elem = document.getElementById("myBar");
+    var width = 1;
+    var id = setInterval(frame, 10);
+    function frame() {
+      if (width >= moveAmount) {
+        clearInterval(id);
+        i = 0;
+      } else {
+        width++;
+        elem.style.width = width + "%";
+      }
+    }
+}
+
+resultBar(0,0,true);
 
 
 /**
@@ -694,6 +740,7 @@ function sendCurrentUser() {
             let data = JSON.parse(r.responseText);
             setUserResults(data.elo, 0.0, 0.0);
             setMaskResponse(false, true);
+            resultBar(0,0,true);
             console.log("sent");
             return;
         }

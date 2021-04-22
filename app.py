@@ -61,7 +61,7 @@ GET_USER_JSON_DIR_PATH = 10
 #globals 
 currentUser = 1        #The current user. see java script. 
 totalNumberOfUsers = 5 #The total number of users.
-currentSubPath = 2     #This can be changed run time. It the the sub path that all data is sotred in.
+currentSubPath = 0     #This can be changed run time. It the the sub path that all data is sotred in.
 currentUserPath = "img\\userMask.png"      # These are just global paths passed between functions 
 consensusMaskPath = "img\\consensusMask"   #
 consensusMaskJsonPath = "consensusMaskJson"#
@@ -236,7 +236,7 @@ def get_userScore():
     data = setUserScoreFromJson(data, currentUser, elo,numCorrect,numIncorrect)
     saveJsonDataObjToFile(data,outPath)
 
-    jsonResp = {'elo' : elo, 'grade' : grade, 'score' : score, "isCorrect" : result }
+    jsonResp = {'elo' : elo, 'grade' : grade, 'score' : score, "isCorrect" : result, "thresh": MISSINGTHRESH }
     #jsonResp = {'elo' : 5, 'grade' : 5, 'score' : 5}
     print("--------------------------------------------------")
     print("Current User[{}]".format(currentUser))
@@ -345,7 +345,6 @@ def get_FinalImage():
     #open the source image 
     #sourceImage = cv2.imread("img\\sourceImg.png")
     sourceImage = cv2.imread(setAndGetDataFolderPath(GET_SOURCE_PATH))
-
 
     #apply the mask
     sourceImage = applyMask(conMask,sourceImage,width,height)
@@ -607,7 +606,7 @@ def getAccumulativeScore(grade, gradeThreshold, accuracyScore, accuracyScoreThre
     """
     #Score Constants
     value = 400 #the elo constant for score 
-    firstTimeAdjust = .5 #the adjustment for a first time player (to prevent a high frist score) 
+    firstTimeAdjust = .5 #the adjustment for a first time player (to prevent a high first score) 
     result = 0 #Do we consider this a correct match?
     #return value
     newElo = 0
