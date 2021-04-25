@@ -313,6 +313,7 @@ document.getElementById("sendUserMask").addEventListener('click', () => {
     r.onreadystatechange = function () {
         if (r.readyState != 4 || r.status != 200) return;
         //alert("Success: " + r.responseText);
+        setRedTruthMask();
         console.log("sent");
     };
     // Send data in below way from JS
@@ -405,7 +406,7 @@ function setUserResults(elo, grade, score) {
     let b = document.getElementsByClassName('grade');
     b[0].innerText = "Grade: " + grade;
     let c = document.getElementsByClassName('score');
-    c[0].innerText = "Score: " + score;
+    c[0].innerText = "Par: " + score*-1;
 }
 /**This sets the mask response message based on whether the mask was correct or not.*/
 function setMaskResponse(result, isReset) {

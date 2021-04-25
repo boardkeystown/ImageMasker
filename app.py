@@ -32,7 +32,7 @@ import scipy.ndimage.morphology as morphology
 
 #App constants 
 GRADETHRESH = 60   
-MISSINGTHRESH = -2100
+MISSINGTHRESH = -4500
 LOWSCOREFILTER = 0.1
 
 #Folder Path Constants  
@@ -61,7 +61,7 @@ GET_USER_JSON_DIR_PATH = 10
 #globals 
 currentUser = 1        #The current user. see java script. 
 totalNumberOfUsers = 5 #The total number of users.
-currentSubPath = 3     #This can be changed run time. It the the sub path that all data is sotred in.
+currentSubPath = 4     #This can be changed run time. It the the sub path that all data is sotred in.
 currentUserPath = "img\\userMask.png"      # These are just global paths passed between functions 
 consensusMaskPath = "img\\consensusMask"   #
 consensusMaskJsonPath = "consensusMaskJson"#
@@ -464,13 +464,12 @@ def hard_reset_users(inputPath):
     data, outPath = loadJsonDataObj(inputPath+os.sep+"users.json")
     #rest the values
     for i in range(0,len(data['users'])):
-        if data['users'][i]['id'] == currentUser:
-            # print(data['users'][i]['elo'])
-            data['users'][i]['elo'] = 0
-            # print(data['users'][i]['correctMatches'])
-            data['users'][i]['correctMatches'] = 0
-            # print(data['users'][i]['incorrectMatches'])
-            data['users'][i]['incorrectMatches'] = 0
+        # print(data['users'][i]['elo'])
+        data['users'][i]['elo'] = 0
+        # print(data['users'][i]['correctMatches'])
+        data['users'][i]['correctMatches'] = 0
+        # print(data['users'][i]['incorrectMatches'])
+        data['users'][i]['incorrectMatches'] = 0
     #save the current values 
     saveJsonDataObjToFile(data,outPath)
 
@@ -573,9 +572,11 @@ def getGradeAndAccuracyScore(turthMaskTotal,userCorrectMaskTotal,userOverlapTota
     :pramas userOverlapTotal: the number of trues that overlap the area of the truth mask
     """
     grade = (userCorrectMaskTotal * 100) / turthMaskTotal
-    accuracyScore = ((grade/100) * userOverlapTotal) -userOverlapTotal
-    if((grade/100) == 1):
-        accuracyScore = -userOverlapTotal
+    #accuracyScore = ((grade/100) * userOverlapTotal) -userOverlapTotal
+    accuracyScore = userOverlapTotal*-1
+    #print(userOverlapTotal)
+    #if((grade/100) == 1):
+    #    accuracyScore = -userOverlapTotal
     return grade, accuracyScore
 
 def getUserMaskAccuracy(user_mask, truth_mask, width, height):
@@ -849,3 +850,4 @@ def computeConsensusMaskAndSave(jsonPath,outPath):
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
     #app.run(debug=True)
+    #app.run()
