@@ -4,6 +4,9 @@
 
 Crowdsourced image masking proof of concept.
 
+![image](https://user-images.githubusercontent.com/43831063/116169594-0ceb7580-a6d3-11eb-884b-044eee75f6f3.png)
+
+
 # Why? 
 
 This is a class project created for CIS 556 : Gamification Design at the University of Massachusetts Dartmouth
