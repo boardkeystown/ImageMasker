@@ -25,3 +25,12 @@ It’s simple.
 # Thanks, I guess? 
 
 No problem. 😃
+
+# Continuing Development Notes 
+
+As this is a prototype and not ready for deployment below is a list of general areas that should be addressed 
+in this project to continue development. 
+
+* Optimize GET and POST request (they are slow and some times fail)
+* Build a database to store images as blobs and user data (currently everything is flat files). Doing so will allow for a more dynamic server state for n users and facilitate the collection and analysis of more data.
+* Optimize / develop more dynamic consensus threshold methods (easier to do when there is a database of images to use). 
